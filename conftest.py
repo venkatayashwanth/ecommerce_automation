@@ -21,7 +21,8 @@ def driver():
         "profile.password_manager_enabled": False
     }
     options.add_experimental_option("prefs", prefs)
-
+    options.add_argument("--headless=new")
+    options.add_argument("--disable-gpu")
     # Disable extensions, info bars, and automation controls
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-infobars")
