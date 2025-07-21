@@ -44,7 +44,8 @@ def driver():
     # Additional trick to prevent detection
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
-    return driver
+    yield driver
+    driver.quit()
 
 
 @pytest.hookimpl(hookwrapper=True)
