@@ -11,6 +11,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 @pytest.fixture
 def driver():
     options = Options()
+    # Enable headless mode if environment variable is set
+    if os.getenv("HEADLESS", "false").lower() == "true":
+        options.add_argument("--headless=new")  # use "--headless=new" for newer Chrome versions
 
     # Disable password manager completely
     prefs = {
