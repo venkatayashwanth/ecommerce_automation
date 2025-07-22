@@ -3,46 +3,40 @@ import os
 from selenium import webdriver
 from datetime import datetime
 
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
 
-@pytest.fixture
-def driver():
-    options = Options()
-    # Enable headless mode if environment variable is set
-    if os.getenv("HEADLESS", "false").lower() == "true":
-        options.add_argument("--headless=new")  # use "--headless=new" for newer Chrome versions
+def pytest_addoption(parser):
+    parser.addoption(
+        "--browser",
+        action="store",
+        default="chrome",
+        help="Browser to run tests on: chrome or firefox"
+    )
 
-    # Disable password manager completely
-    prefs = {
-        "credentials_enable_service": False,
-        "profile.password_manager_enabled": False
-    }
-    options.add_experimental_option("prefs", prefs)
-    options.add_argument("--headless=new")
-    options.add_argument("--disable-gpu")
-    # Disable extensions, info bars, and automation controls
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-infobars")
-    options.add_argument("--disable-notifications")
-    options.add_argument("--start-maximized")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--remote-debugging-port=9222")
 
-    # Start Chrome in incognito mode
-    options.add_argument("--incognito")
+@pytest.fixture(scope="function")
+def driver(request):
+    browser = request.config.getoption("--browser")
 
-    # Hide "Chrome is being controlled by automated test software"
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option('useAutomationExtension', False)
+    if browser == "chrome":
+        options = ChromeOptions()
+        options.add_argument("--headless=new")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--window-size=1920,1080")
+        driver = webdriver.Chrome(options=options)
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    elif browser == "firefox":
+        options = FirefoxOptions()
+        options.add_argument("--headless")
+        options.add_argument("--width=1920")
+        options.add_argument("--height=1080")
+        driver = webdriver.Firefox(options=options)
 
-    # Additional trick to prevent detection
-    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    else:
+        raise ValueError(f"Unsupported browser: {browser}")
 
     yield driver
     driver.quit()
