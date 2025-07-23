@@ -1,4 +1,4 @@
-name: Run Pytest Tests
+name: Run Pytest with Video Recording
 
 on:
   push:
@@ -21,13 +21,32 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt update
+          sudo apt install -y xvfb ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Pytest
-        env:
-          CHROME_BIN: /usr/bin/google-chrome
-        run: pytest
+      - name: Start virtual display and record screen
+        run: |
+          mkdir -p recordings
+          Xvfb :99 -screen 0 1920x1080x24 &  # Start virtual display
+          export DISPLAY=:99
+
+          ffmpeg -video_size 1920x1080 -framerate 25 -f x11grab -i :99 \
+            -codec:v libx264 -preset ultrafast recordings/test_run.mp4 > /dev/null 2>&1 &
+
+          echo $! > ffmpeg_pid.txt
+
+          pytest
+
+          kill $(cat ffmpeg_pid.txt)
+
+      - name: Upload test recording
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-video
+          path: recordings/test_run.mp4
 
       - name: Upload Screenshots (if any)
         if: always()
