@@ -1,10 +1,8 @@
-name: Run Pytest Tests with Video Recording
+name: Run Selected Tests with Video
 
 on:
   push:
-    branches: [ecommerce_automation]
-  pull_request:
-    branches: [ecommerce_automation]
+    branches: [record-tests]
 
 jobs:
   test:
@@ -19,34 +17,26 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install dependencies and Xvfb
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Tests with XVFB and Record Video
+      - name: Run selected tests and record video
         run: |
-          mkdir -p recordings
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
-          ffmpeg -y -video_size 1920x1080 -framerate 25 -f x11grab -i :99 -codec:v libx264 recordings/test_run.mp4 &
-          RECORD_PID=$!
-          sleep 5  # Wait a bit to ensure ffmpeg is ready
-          pytest || true  # Don't stop pipeline if tests fail
-          kill $RECORD_PID
+          sleep 3
+          ffmpeg -y -video_size 1920x1080 -framerate 25 -f x11grab -i :99 -codec:v libx264 -preset ultrafast -pix_fmt yuv420p recorded_tests.mp4 &
+          FFMPEG_PID=$!
+          pytest tests/test_logout.py::test_logout tests/test_checkout.py::test_checkout
+          kill $FFMPEG_PID
 
-      - name: Upload Test Recording
+      - name: Upload Test Video
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-video
-          path: recordings/
-
-      - name: Upload Screenshots (if any)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshots
-          path: screenshots/
+          name: test-recording
+          path: recorded_tests.mp4
