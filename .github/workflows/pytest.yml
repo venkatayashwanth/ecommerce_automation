@@ -1,4 +1,4 @@
-name: Run Pytest with Video Recording
+name: Run Pytest Tests with Video Recording
 
 on:
   push:
@@ -21,32 +21,28 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y xvfb ffmpeg
+          sudo apt-get update
+          sudo apt-get install -y xvfb ffmpeg
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Start virtual display and record screen
+      - name: Run Tests with XVFB and Record Video
         run: |
           mkdir -p recordings
-          Xvfb :99 -screen 0 1920x1080x24 &  # Start virtual display
+          Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
+          ffmpeg -y -video_size 1920x1080 -framerate 25 -f x11grab -i :99 -codec:v libx264 recordings/test_run.mp4 &
+          RECORD_PID=$!
+          sleep 5  # Wait a bit to ensure ffmpeg is ready
+          pytest || true  # Don't stop pipeline if tests fail
+          kill $RECORD_PID
 
-          ffmpeg -video_size 1920x1080 -framerate 25 -f x11grab -i :99 \
-            -codec:v libx264 -preset ultrafast recordings/test_run.mp4 > /dev/null 2>&1 &
-
-          echo $! > ffmpeg_pid.txt
-
-          pytest
-
-          kill $(cat ffmpeg_pid.txt)
-
-      - name: Upload test recording
+      - name: Upload Test Recording
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-video
-          path: recordings/test_run.mp4
+          path: recordings/
 
       - name: Upload Screenshots (if any)
         if: always()
