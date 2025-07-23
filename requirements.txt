@@ -1,3 +1,4 @@
 selenium
+requests
 pytest
 webdriver-manager
