@@ -1,8 +1,7 @@
 name: Run Selected Tests with Video
 
 on:
-  push:
-    branches: [record-tests]
+  workflow_dispatch:
 
 jobs:
   test:
