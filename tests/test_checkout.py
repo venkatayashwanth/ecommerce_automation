@@ -1,4 +1,8 @@
 import pytest
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 from actions.login_actions import loginactions
 from actions.inventory_actions import InventoryActions
 from actions.cart_actions import CartActions
@@ -10,14 +14,27 @@ from locators.checkout_locators import CheckoutPageLocators
 
 
 def test_checkout_process(driver):
+    driver.delete_all_cookies()
     driver.get("https://www.saucedemo.com/")
-    loginactions(driver, LoginPageLocators,"standard_user", "secret_sauce")
-    InventoryActions(driver, InventoryPageLocators).add_first_item_to_cart()
-    InventoryActions(driver, InventoryPageLocators).go_to_cart()
-    CartActions(driver, CartPageLocators).click_checkout()
+    loginactions(driver, LoginPageLocators, "standard_user", "secret_sauce")
 
+    inventory = InventoryActions(driver, InventoryPageLocators)
+    cart = CartActions(driver, CartPageLocators)
     checkout = CheckoutActions(driver, CheckoutPageLocators)
+
+    inventory.add_first_item_to_cart()
+    inventory.go_to_cart()
+    cart.click_checkout()
+
+    wait = WebDriverWait(driver, 10)
+    wait.until(EC.presence_of_element_located((By.ID, "first-name")))  # ✅ Ensures we are on checkout step one
+
     checkout.enter_checkout_info("John", "Doe", "12345")
+    wait.until(EC.presence_of_element_located((By.ID, "finish")))
+
     checkout.finish_checkout()
+
+    # Wait until redirected to checkout complete page
+    wait.until(EC.url_contains("checkout-complete"))
 
     assert "checkout-complete" in driver.current_url

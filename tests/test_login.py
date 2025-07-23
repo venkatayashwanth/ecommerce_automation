@@ -8,6 +8,7 @@ test_data = load_json_data("login_data.json")
 
 @pytest.mark.parametrize("data", test_data)
 def test_login_with_json(driver, data):
+    driver.delete_all_cookies()
     driver.get("https://www.saucedemo.com/")
     loginactions(driver, LoginPageLocators,data["username"], data["password"])
     if data["username"] == "locked_out_user":

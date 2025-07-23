@@ -1,0 +1,43 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# VSCode / PyCharm settings
+.vscode/
+.idea/
+
+# Test result cache
+.pytest_cache/
+.cache/
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# dotenv files (optional)
+.env
+.env.*
+
+# Jupyter Notebooks checkpoints (if any)
+.ipynb_checkpoints/
+
+# Coverage reports
+htmlcov/
+coverage.xml
+.coverage
+
+# Selenium downloads / drivers (if you store them)
+*.crdownload
+*.exe
+chromedriver
+geckodriver
