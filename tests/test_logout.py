@@ -1,3 +1,5 @@
+import time
+
 import pytest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,6 +13,24 @@ def test_logout(driver):
     driver.delete_all_cookies()
     driver.get("https://www.saucedemo.com/")
     loginactions(driver, LoginPageLocators, "standard_user", "secret_sauce")
+    time.sleep(3)  # adjust this if needed
+    driver.execute_script(""" 
+        const observer = new MutationObserver((mutations) => {
+            const popup = document.querySelector('div[role="dialog"], .modal, #popup-modal');
+            if (popup) {
+                popup.remove();
+            }
+            const backdrop = document.querySelector('.modal-backdrop, .MuiBackdrop-root');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    """)
 
     wait = WebDriverWait(driver, 10)
 
