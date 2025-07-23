@@ -1,4 +1,4 @@
-name: Run Selected Pytest Tests with Video Recording
+name: Run Pytest Tests with Video Recording
 
 on:
   push:
@@ -26,15 +26,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Selected Tests with XVFB and Record Video
+      - name: Run Tests with XVFB and Record Video
         run: |
           mkdir -p recordings
           Xvfb :99 -screen 0 1920x1080x24 &
           export DISPLAY=:99
           ffmpeg -y -video_size 1920x1080 -framerate 25 -f x11grab -i :99 -codec:v libx264 recordings/test_run.mp4 &
           RECORD_PID=$!
-          sleep 5  # Let ffmpeg start recording
-          pytest -k "test_checkout or test_logout" || true
+          sleep 5  # Wait a bit to ensure ffmpeg is ready
+          pytest || true  # Don't stop pipeline if tests fail
           kill $RECORD_PID
 
       - name: Upload Test Recording
